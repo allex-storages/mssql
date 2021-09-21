@@ -1,0 +1,28 @@
+{
+  "name": "allex_mssqlstorage",
+  "version": "1.0.0",
+  "description": "MSSQL storage for AllexJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "allex-mocha"
+  },
+  "dependencies": {
+    "mssql": "7.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/allex-storages/mssql.git"
+  },
+  "keywords": [
+    "ecosystem:AllexJS",
+    "mssql",
+    "storage"
+  ],
+  "author": "Andrija Petrovic <andrija.hers@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/allex-storages/mssql/issues"
+  },
+  "homepage": "https://github.com/allex-storages/mssql#readme",
+  "devDependencies": {}
+}
