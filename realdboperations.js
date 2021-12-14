@@ -24,6 +24,12 @@ function createRealDbOperations(execlib, mssql, MSSQLStorage, sqlsentencinglib, 
     req.on('row', onSqlRow.bind(null, querystate));
     req.on('done', onReadEnd.bind(null, querystate));
     req.on('error', defer.reject.bind(defer));
+    /*
+    req.on('error', function (reason) {
+      console.error('SQL Storage error', reason);
+      defer.reject(reason);
+    });
+    */
     querystate = null;
   };
 

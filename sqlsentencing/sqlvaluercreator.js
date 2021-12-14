@@ -33,7 +33,7 @@ function createSqlValuer (execlib, mylib) {
   function toSqlValue (value) {
     if (lib.isString(value)) return quoted(value);
     if (lib.isNumber(value)) return value;
-    if (lib.isBool(value)) return value ? 1 : 0;
+    if (lib.isBoolean(value)) return value ? 1 : 0;
     return 'NULL';
   }
 
