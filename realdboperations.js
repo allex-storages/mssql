@@ -5,8 +5,8 @@ function createRealDbOperations(execlib, mssql, MSSQLStorage, sqlsentencinglib, 
     q = lib.q,
     qlib = lib.qlib;
 
-  MSSQLStorage.prototype.realDoRead = function (query, defer) {
-    var f = query.filter(), d = f.descriptor();
+  MSSQLStorage.prototype.realDoRead = function (connection, query) {
+    var f = query.filter(), d = f.descriptor(), defer = q.defer(), ret = defer.promise;
     var sqlf = sqlfilteringlib.Factory(d);
     var sqlquery = 'SELECT * FROM '+
       sqlsentencinglib.entityNameOf(this.tablename)+
@@ -18,7 +18,7 @@ function createRealDbOperations(execlib, mssql, MSSQLStorage, sqlsentencinglib, 
       sql: sqlquery,
       defer: defer
     };
-    var req = this.client.request();
+    var req = connection.request();
     req.stream = true;
     req.query(sqlquery);
     req.on('row', onSqlRow.bind(null, querystate));
@@ -31,6 +31,7 @@ function createRealDbOperations(execlib, mssql, MSSQLStorage, sqlsentencinglib, 
     });
     */
     querystate = null;
+    return ret;
   };
 
   function onSqlRow (querystate, row) {
@@ -47,45 +48,28 @@ function createRealDbOperations(execlib, mssql, MSSQLStorage, sqlsentencinglib, 
     querystate.defer.resolve(querystate.done);
   }
 
-  MSSQLStorage.prototype.realDoCreate = function (datahash, defer) {
-    var query = this.sentencer.insertFromDataRecord(this.tablename, this.__record, datahash);
-    qlib.promise2defer(this.client
+  MSSQLStorage.prototype.realDoCreate = function (connection, datahash) {    
+    var query;
+    query = this.sentencer.insertFromDataRecord(this.tablename, this.__record, datahash);
+    return connection
       .request()
-      .query(query)
-      .then(onSqlCreate.bind(null, datahash), onSqlCreateFail.bind(null, query))
-      ,
-      defer);
-    datahash = null;
-    query = null;
+      .query(query);
   };
-  function onSqlCreate (datahash, res) {
-    return datahash;
-  }
-  function onSqlCreateFail (query, reason) {
-    throw reason;
-  }
-  MSSQLStorage.prototype.realDoDelete = function (filter, defer) {
-    var d = filter.descriptor();
-    var sqlf = sqlfilteringlib.Factory(d);
-    var query = 'DELETE FROM '+
+
+  MSSQLStorage.prototype.realDoDelete = function (connection, filter) {
+    var d, sqlf, query, ret;
+    d = filter.descriptor();
+    sqlf = sqlfilteringlib.Factory(d);
+    query = 'DELETE FROM '+
       sqlsentencinglib.entityNameOf(this.tablename)+
       ' '+
       sqlf.getQueryConditional('WHERE');
-    qlib.promise2defer(
-      this.client
+    return connection
       .request()
-      .query(query).then(onSqlDelete)
-      ,
-      defer);
-    query = null;
+      .query(query);
   };
 
-  function onSqlDelete (res) {
-    return res;
-  }
-
-
-  MSSQLStorage.prototype.realDoUpdate = function (filter, updateobj, options, defer) {
+  MSSQLStorage.prototype.realDoUpdate = function (connection, filter, updateobj, options) {
     var d = filter.descriptor();
     var sqlf = sqlfilteringlib.Factory(d);
     var query = 'UPDATE '+
@@ -94,20 +78,10 @@ function createRealDbOperations(execlib, mssql, MSSQLStorage, sqlsentencinglib, 
       this.sentencer.setClauseFromObject(updateobj)+
       ' '+
       sqlf.getQueryConditional('WHERE');
-      qlib.promise2defer(
-      this.client
+    return connection
       .request()
-      .query(query).then(onSqlUpdate, onSqlUpdateFail)
-      ,
-      defer);
+      .query(query);
   };
-
-  function onSqlUpdate (res) {
-    return res;
-  }
-  function onSqlUpdateFail (reason) {
-    throw reason;
-  }
 }
 
 module.exports = createRealDbOperations;

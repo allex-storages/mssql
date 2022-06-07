@@ -4,14 +4,16 @@ function createConnectionHandling(execlib, mssql, MSSQLStorage, joblib) {
   var lib = execlib.lib,
   q = lib.q;
 
-  MSSQLStorage.prototype.connect = function (storagedescriptor) {
+  MSSQLStorage.prototype.acquireResource = function (storagedescriptor) {
     var _sd = storagedescriptor;
-    mssql.connect(storagedescriptor).then(
+    return mssql.connect(storagedescriptor).then(
       this.onConnected.bind(this, _sd),
       this.onConnectionFailed.bind(this, _sd)
     );
     _sd = null;
   };
+
+
   MSSQLStorage.prototype.onConnected = function (storagedescriptor, pool) {
     var _sd = storagedescriptor;
     this.client = pool;
@@ -26,14 +28,26 @@ function createConnectionHandling(execlib, mssql, MSSQLStorage, joblib) {
     if (storagedescriptor.record) {
       this.checkPrimaryKeyDescriptor(storagedescriptor.record.primaryKey);
     }
+    return this.client;
   };
   MSSQLStorage.prototype.onConnectionFailed = function (storagedescriptor, reason) {
     var _sd = storagedescriptor;
     console.log('Could not connect to MSSQL', storagedescriptor);
     console.log(reason);
     console.log('Will try again');
-    lib.runNext(this.connect.bind(this, _sd), 1000);
+    lib.runNext(this.acquireResource.bind(this, _sd), 1000);
     _sd = null;
+  };
+
+  MSSQLStorage.prototype.isResourceUsable = function (connection) {
+    if (!connection) {
+      return false;
+    }
+    return !connection._connecting && connection._connected && connection._healthy;
+  };
+
+  MSSQLStorage.prototype.destroyResource = function (res) {
+    return res.close();
   };
 }
 

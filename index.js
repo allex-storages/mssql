@@ -2,16 +2,16 @@ var mssql = require('mssql');
 
 function main (execlib){
   'use strict';
-  return execlib.loadDependencies('client', ['allex_dataservice'], createMSSQLStorage.bind(null, execlib));
+  return execlib.loadDependencies('client', ['allex_datalib', 'allex_resourcehandlinglib'], createMSSQLStorage.bind(null, execlib));
 }
 
-function createMSSQLStorage (execlib) {
+function createMSSQLStorage (execlib, datalib, reshandlinglib) {
   'use strict';
 
   var lib = execlib.lib,
-    q = lib.q,
-    dataSuite = execlib.dataSuite,
-    StorageBase = dataSuite.StorageBase,
+    qlib = lib.qlib,
+    StorageBase = datalib.StorageBase,
+    ResMixin = reshandlinglib.mixins.ResourceHandler,
     sqlsentencinglib = require('./sqlsentencing')(execlib),
     sqlfilteringlib = require('./sqlfiltering')(execlib, sqlsentencinglib),
     joblib = require('./jobs')(execlib, sqlsentencinglib);
@@ -27,15 +27,17 @@ function createMSSQLStorage (execlib) {
       throw new lib.Error('NO_TABLE_IN_STORAGEDESCRIPTOR', 'MongoStorage needs a storagedescriptor.table name in constructor');
     }
     StorageBase.call(this, storagedescriptor);
+    ResMixin.call(this, storagedescriptor);
     this.client = null;
     this.dbname = storagedescriptor.database;
     this.tablename = storagedescriptor.table;
     this.indexes = null;
     this.q = new lib.Fifo();
     this.sentencer = new sqlsentencinglib.SqlSentencer();
-    this.connect(storagedescriptor);
+    //this.connect(storagedescriptor); //get this out
   }
   lib.inherit(MSSQLStorage, StorageBase);
+  ResMixin.addMethods(MSSQLStorage);
   MSSQLStorage.prototype.destroy = function () {
     if (this.sentencer){
       this.sentencer.destroy();
@@ -54,24 +56,24 @@ function createMSSQLStorage (execlib) {
     if (this.client) {
       this.client.close();
     }
+    ResMixin.prototype.destroy.call(this);
     StorageBase.prototype.destroy.call(this);
   };
 
   MSSQLStorage.prototype.doRead = function (query, defer) {
-    this.handleQueue('realDoRead', [query, defer]);
+    qlib.promise2defer(this.resourceHandlingJob('realDoRead', [query]).go(), defer);
   };
   MSSQLStorage.prototype.doCreate = function (datahash, defer) {
-    this.handleQueue('realDoCreate', [datahash, defer]);
+    qlib.promise2defer(this.resourceHandlingJob('realDoCreate', [datahash]).go(), defer);
   };
   MSSQLStorage.prototype.doDelete = function (filter, defer) {
-    this.handleQueue('realDoDelete', [filter, defer]);
+    qlib.promise2defer(this.resourceHandlingJob('realDoDelete', [filter]).go(), defer);
   };
   MSSQLStorage.prototype.doUpdate = function (filter, updateobj, options, defer) {
-    this.handleQueue('realDoUpdate', [filter, updateobj, options, defer]);
+    qlib.promise2defer(this.resourceHandlingJob('realDoUpdate', [filter, updateobj, options]).go(), defer);
   };
 
   require('./connectionhandling')(execlib, mssql, MSSQLStorage, joblib);
-  require('./queuehandling')(execlib, mssql, MSSQLStorage);
   require('./keyhandling')(execlib, mssql, MSSQLStorage, sqlsentencinglib, sqlfilteringlib, joblib);
   require('./realdboperations')(execlib, mssql, MSSQLStorage, sqlsentencinglib, sqlfilteringlib);
 
