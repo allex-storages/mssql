@@ -35,7 +35,6 @@ function createConnectionHandling(execlib, mssql, MSSQLStorage, joblib) {
     console.log('Could not connect to MSSQL', storagedescriptor);
     console.log(reason);
     console.log('Will try again');
-    lib.runNext(this.acquireResource.bind(this, _sd), 1000);
     _sd = null;
   };
 

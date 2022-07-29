@@ -10,10 +10,10 @@ var script = "IF EXISTS (SELECT 1 "+
   "[age] int NOT NULL);"
 
 var prophash = {
-  "server": "ANDRODESK",
+  "server": "mysqlserver",
   "database": "test_datalib",
   "user": "sa",
-  "password": "Kremplazma.123",
+  "password": "SQL1.Server2",
   "table": "users",
   "options" : {
     "trustServerCertificate": true
@@ -36,8 +36,10 @@ describe('Test Integration', function () {
       }
     ), 'init');
   });
-  BasicStorageTest(
-		function () { return MSSQLStorageClass; },
-    function () { return prophash;
-	});
+  for (var i=0; i<10; i++) {
+    BasicStorageTest(
+      function () { return MSSQLStorageClass; },
+      function () { return prophash;
+    });
+  }
 });

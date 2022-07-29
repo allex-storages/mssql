@@ -9,7 +9,7 @@ function createBaseFilter (lib) {
   };
   BaseFilter.prototype.getQueryConditional = function (clause) {
     var qc = this.generateQueryConditional();
-    clause = clause || 'WHERE';
+    //clause = clause || 'WHERE';
     return (lib.isString(qc) && qc.length>0) ? clause+' '+qc : '';
   };
   BaseFilter.prototype.generateQueryConditional = function () {

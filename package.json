@@ -1,6 +1,6 @@
 {
   "name": "allex_mssqlstorage",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MSSQL storage for AllexJS",
   "main": "index.js",
   "scripts": {

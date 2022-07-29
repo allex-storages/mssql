@@ -5,13 +5,7 @@ function createSqlFiltering (execlib, sqlsentencinglib) {
 
   var mylib = {};
   var map = new lib.Map();
-  var BaseFilter = require('./baseproducer')(lib);
-  var AllPassFilter = require('./allpassproducer')(lib, BaseFilter);
-  var PropertyFilter = require('./propertycreator')(lib, BaseFilter);
-  var EqFilter = require('./eqproducer')(lib, PropertyFilter, sqlsentencinglib);
-  var LtFilter = require('./ltproducer')(lib, PropertyFilter, sqlsentencinglib);
-  map.add('eq', EqFilter);
-  map.add('lt', LtFilter);
+
 
   mylib.Factory = function(descriptor) {
     if (!descriptor) {
@@ -24,6 +18,19 @@ function createSqlFiltering (execlib, sqlsentencinglib) {
     }
     return new filterctor(descriptor);
   };
+
+  var BaseFilter = require('./baseproducer')(lib);
+  var AllPassFilter = require('./allpassproducer')(lib, BaseFilter);
+  var PropertyFilter = require('./propertycreator')(lib, BaseFilter);
+  var EqFilter = require('./eqproducer')(lib, PropertyFilter, sqlsentencinglib);
+  var LtFilter = require('./ltproducer')(lib, PropertyFilter, sqlsentencinglib);
+
+  var BooleanFilter = require('./booleanproducer')(lib, BaseFilter, mylib.Factory);
+  var BooleanBinaryFilter = require('./booleanbinaryproducer')(lib, BooleanFilter, mylib.Factory);
+  var AndFilter = require('./andproducer')(lib, BooleanBinaryFilter);
+  map.add('eq', EqFilter);
+  map.add('lt', LtFilter);
+  map.add('and', AndFilter);
 
   return mylib;
 }

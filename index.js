@@ -70,8 +70,17 @@ function createMSSQLStorage (execlib, datalib, reshandlinglib) {
     qlib.promise2defer(this.resourceHandlingJob('realDoDelete', [filter]).go(), defer);
   };
   MSSQLStorage.prototype.doUpdate = function (filter, updateobj, options, defer) {
-    qlib.promise2defer(this.resourceHandlingJob('realDoUpdate', [filter, updateobj, options]).go(), defer);
+    //qlib.promise2defer(this.resourceHandlingJob('realDoUpdate', [filter, updateobj, options]).go(), defer);
+    this.resourceHandlingJob('realDoUpdate', [filter, updateobj, options]).go().then(updater.bind(null, updateobj, defer));
+    updateobj = null;
+    defer = null;
   };
+
+  function updater (updateobj, defer, res) {
+    var updatedrowcount = res && lib.isArray(res.rowsAffected) && res.rowsAffected.length>0 ? res.rowsAffected[0] : 0;
+    defer.notify([updateobj, updatedrowcount]);
+    defer.resolve(updatedrowcount);
+  }
 
   require('./connectionhandling')(execlib, mssql, MSSQLStorage, joblib);
   require('./keyhandling')(execlib, mssql, MSSQLStorage, sqlsentencinglib, sqlfilteringlib, joblib);

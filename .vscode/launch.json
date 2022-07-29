@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "pwa-node",
+      "type": "node",
       "request": "launch",
       "name": "Launch Master",
       "cwd":"c:/work/testmssqlstoragecloud",
@@ -21,14 +21,19 @@
       "processId": "${command:PickProcess}"
     },
     {
-      "name": "allex-mocha",
-      "type": "pwa-node",
+      "name": "Basic Test",
+      "type": "node",
       "request": "launch",
       "cwd":"${workspaceFolder}/test",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "c:/users/andri/AppData/roaming/npm/node_modules/allextesting/commandline/allex-mocha",
+      "windows": {
+        "program": "${env:APPDATA}/npm/node_modules/allextesting/commandline/allex-mocha",
+      },
+      "linux": {
+        "program": "${env:HOME}/lib/node_modules/allextesting/commandline/allex-mocha",
+      },
       "args": ["test.basic.js"]
     }
   ]
