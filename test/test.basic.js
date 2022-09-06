@@ -9,37 +9,33 @@ var script = "IF EXISTS (SELECT 1 "+
   "[gender] varchar(50) NOT NULL,"+
   "[age] int NOT NULL);"
 
-var prophash = {
-  "server": "mysqlserver",
-  "database": "test_datalib",
-  "user": "sa",
-  "password": "SQL1.Server2",
-  "table": "users",
-  "options" : {
-    "trustServerCertificate": true
-  }
-};
+var prophash = require('./prophash');
 
 describe('Test Integration', function () {
   loadMochaIntegration('allex_datalib');
   it ('Load mssql storage', function () {
     return setGlobal('MSSQLStorageClass', require('..')(execlib));
   });
-  it ('Run the init script', function () {
+  it ('Create the "users" table first', function () {
     return qlib.promise2console(mssql.connect(prophash).then(
-      function () {
-        return mssql.query(script).then(
+      function (pool) {
+        return pool.query(script).then(
           function (res) {
+            pool.close();
             return res;
+          },
+          function (reason) {
+            pool.close();
+            throw reason;
           }
         );
       }
     ), 'init');
   });
-  for (var i=0; i<10; i++) {
+  for (var i=0; i<1; i++) {
     BasicStorageTest(
       function () { return MSSQLStorageClass; },
-      function () { return prophash;
-    });
+      function () { return prophash; }
+    );
   }
 });
